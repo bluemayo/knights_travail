@@ -1,13 +1,17 @@
 # frozen_string_literal: true
 
+require_relative 'board'
 # defines the position of a knight and where it can move
 class Knight
-  attr_accessor :at, :possible
+  attr_accessor :at, :possible, :board
 
   def initialize(at)
     @at = at
     @possible = calc_possible(at[0], at[1])
     p possible
+    @board = Array.new(8).map { Array.new(8) }
+    board[at[0]][at[1]] = 'knight'
+    p board
   end
 
   private
