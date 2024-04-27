@@ -1,40 +1,68 @@
 # frozen_string_literal: true
 
-# defines the position of a knight and where it can move
-class Knight
-  attr_accessor :at, :possible
+require_relative 'calculations'
 
-  def initialize(at)
-    @at = at
-    @possible = calc_possible(at[0], at[1])
-    p possible
+# Defines a board that shows whether a position has been used already or not
+class Knight
+  include Calculations
+
+  attr_accessor :board, :stack, :position, :results
+
+  def initialize(position)
+    # @board = Array.new(8).map { Array.new(8) }
+    @position = position
+    @stack = []
+    @results = []
   end
 
-  private
+  def find_path(target, initial = position) # rubocop: disable Metrics
+    if array_equal?(stack.last, target)
+      update_results(stack)
+      return
+    end
 
-  def calc_possible(x, y) # rubocop:disable Naming/MethodParameterName
-    to = []
-    x_array = calc_x_array(x)
-    x_array.each do |x_number|
-      diff = x < x_number ? 3 - x_number - x : 3 - x - x_number
-      y_array = calc_y_array(y, diff)
-      y_array.each do |y_number|
-        to << [x_number, y_number]
+    # board[initial[0]][initial[1]] = true
+
+    if stack.length < 7
+      calc_possible(initial).each do |possible|
+        stack.push(possible)
+        find_path(target, possible) # if check_board(possible)
+        stack.pop
       end
     end
-    to
   end
 
-  def calc_x_array(x) # rubocop:disable Naming/MethodParameterName
-    array = (x - 2..x + 2).to_a
-    array.delete_at(2)
-    array.reject { |position| position.negative? || position > 7 }
+  def check_board(place)
+    board[place[0]][place[1]].nil? ? true : false
   end
 
-  def calc_y_array(y, diff) # rubocop:disable Naming/MethodParameterName
-    array = Array.new(2, y)
-    array[0] -= diff
-    array[1] += diff
-    array.reject { |position| position.negative? || position > 7 }
+  def update_results(result)
+    array = result.map { |path| path }
+    results << array
+  end
+
+  def choose_shortest
+    self.results = results.reduce(Array.new(7)) do |result, path|
+      result = path if path.length < result.length
+      result
+    end
+  end
+
+  def pretty_print
+    puts "You made it in #{results.length} moves!  Here's your path:"
+    results.each { |array| puts "[#{array[0]},#{array[1]}]" }
+  end
+
+  def prove
+    p calc_possible([5, 0])
   end
 end
+
+def knight_moves(initial, target)
+  my_knight = Knight.new(initial)
+  my_knight.find_path(target)
+  my_knight.choose_shortest
+  my_knight.pretty_print
+end
+
+knight_moves([0, 0], [5, 5])
